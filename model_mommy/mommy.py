@@ -58,13 +58,13 @@ foreign_key_required = [lambda field: ('model', field.related.parent_model)]
 
 MAX_MANY_QUANTITY = 5
 
-def make(model, _quantity=None, make_m2m=False, **attrs):
+def make(model, _quantity=None, _skip_blank=True, make_m2m=False, **attrs):
     """
     Creates a persisted instance from a given model its associated models.
     It fill the fields with random values or you can specify
     which fields you want to define its values by yourself.
     """
-    mommy = Mommy(model, make_m2m=make_m2m)
+    mommy = Mommy(model, make_m2m=make_m2m, skip_blank=_skip_blank)
     if _quantity and (not isinstance(_quantity, int) or _quantity < 1):
         raise InvalidQuantityException
 
@@ -232,9 +232,10 @@ class Mommy(object):
     # rebuilding the model cache for every make_* or prepare_* call.
     finder = ModelFinder()
 
-    def __init__(self, model, make_m2m=False):
+    def __init__(self, model, make_m2m=False, skip_blank=True):
         self.make_m2m = make_m2m
         self.m2m_dict = {}
+        self.skip_blank=skip_blank
 
         if isinstance(model, ModelBase):
             self.model = model
@@ -286,7 +287,7 @@ class Mommy(object):
 
             if all([field.name not in model_attrs, field.name not in self.rel_fields, field.name not in self.attr_mapping]):
                 # Django is quirky in that BooleanFields are always "blank", but have no default default.
-                if not issubclass(field.__class__, Field) or field.has_default() or (field.blank and not isinstance(field, BooleanField)):
+                if not issubclass(field.__class__, Field) or field.has_default() or (field.blank and self.skip_blank and not isinstance(field, BooleanField)):
                     continue
 
             if isinstance(field, ManyToManyField):

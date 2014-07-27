@@ -357,6 +357,13 @@ class SkipDefaultsTestCase(TestCase):
         self.assertEqual(dummy.default_slug_field, 'a-slug')
 
 
+class DontSkipBlanksIfToldToTestCase(TestCase):
+    def test_dont_skip_blank(self):
+        dummy = mommy.make(DummyBlankFieldsModel, _skip_blank=False)
+        self.assertNotEqual(dummy.blank_char_field, '')
+        self.assertNotEqual(dummy.blank_text_field, '')
+
+
 if VERSION < (1, 4):
     from test.generic.forms import DummyIPAddressFieldForm
 
